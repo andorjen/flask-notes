@@ -1,7 +1,7 @@
 from flask_debugtoolbar import DebugToolbarExtension
 from flask import Flask, flash, redirect, render_template, session
-from models import db, connect_db, User
-from forms import RegisterUserForm, LoginUserForm, OnlyCsrfForm
+from models import db, connect_db, User, Note
+from forms import AddNoteForm, RegisterUserForm, LoginUserForm, OnlyCsrfForm
 
 
 app = Flask(__name__)
@@ -16,7 +16,7 @@ app.config['SECRET_KEY'] = 'MY_SECRET'
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 debug = DebugToolbarExtension(app)
 
-
+db.drop_all()
 db.create_all()
 
 
@@ -109,3 +109,62 @@ def logout_user():
         return redirect('/')
 
     return redirect('/')  # is this still best return?
+
+
+@app.post('/users/<username>/delete')
+def delete_user(username):
+    """delete user and all of the user's notes from database,
+    and redirect to /.
+    """
+    if "username" not in session:
+        flash("You must be logged in first")
+        return redirect('/login')
+
+    if username != session['username']:
+        flash("You can not delete other users")
+        return redirect(f'/users/{session["username"]}')
+
+    form = OnlyCsrfForm()
+
+    if form.validate_on_submit():
+        user = User.query.get_or_404(username)
+
+        for note in user.notes:
+            db.session.delete(note)
+
+        db.session.delete(user)
+        db.session.commit()
+
+        session.pop("username", None)
+        flash('Deleted user account')
+        return redirect('/')
+
+
+@app.route('/users/<username>/notes/add', methods=['GET', 'POST'])
+def add_note_form(username):
+    """Render add note form"""
+
+    if "username" not in session:
+        flash("You must be logged in first")
+        return redirect('/login')
+
+    if username != session['username']:
+        flash("You can not add note for other users")
+        return redirect(f'/users/{session["username"]}')
+
+    form = AddNoteForm()
+
+    if form.validate_on_submit():
+        user = User.query.get_or_404(username)
+        title = form.title.data
+        content = form.content.data
+
+        note = Note(title=title, content=content, owner=user.username)
+
+        db.session.add(note)
+        db.session.commit()
+
+        return redirect(f'/users/{username}')
+
+    else:
+        return render_template('note.html', form=form)

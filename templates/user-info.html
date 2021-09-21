@@ -15,11 +15,31 @@
     <li>{{ user.last_name }}</li>
     <li>{{ user.email }}</li>
 </ul>
+<ul>
+    {% for note in user.notes %}
+    <li>
+        <a href="/notes/{{ note.id }}/update"> {{ note.title }}</a>
 
-<form id="user-logout-form" action="/logout" method="POST">
+        <form id="delete-post-form" action="/notes/{{note.id}}/delete" method="POST">
+            {{ form.hidden_tag() }}
+
+            <button>Delete Note</button>
+        </form>
+    </li>
+    {% endfor %}
+</ul>
+<a href="/users/{{user.username}}/notes/add" class="btn btn-primary">Add Note</a>
+
+<form id="delete-user-form" action="/users/{{user.username}}/delete" method="POST">
+    {{ form.hidden_tag() }}
+
+    <button>Delete User</button>
+</form>
+
+<!-- <form id="user-logout-form" action="/logout" method="POST">
     {{ form.hidden_tag() }}
 
     <button>Log Out</button>
-</form>
+</form> -->
 
 {% endblock %}

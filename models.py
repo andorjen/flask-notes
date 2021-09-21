@@ -36,6 +36,10 @@ class User(db.Model):
         db.String(30),
         nullable=False)
 
+    notes = db.relationship(
+        'Note',
+        backref='author')
+
     @classmethod  # anything related to adding to database should be in class methods; not commit
     # instanciate user here and all add to db, but not commit; the additional
     # pass in additional parameters, remove line 43
@@ -65,3 +69,27 @@ class User(db.Model):
             return u
         else:
             return False
+
+
+class Note(db.Model):
+    """Note"""
+
+    __tablename__ = "notes"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+        autoincrement=True)
+
+    title = db.Column(
+        db.String(100),
+        nullable=False)
+
+    content = db.Column(
+        db.Text,
+        nullable=False)
+
+    owner = db.Column(
+        db.String,
+        db.ForeignKey("users.username"),
+        nullable=False)
