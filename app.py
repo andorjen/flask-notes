@@ -1,7 +1,7 @@
 from flask_debugtoolbar import DebugToolbarExtension
-from flask import Flask, flash, redirect, render_template, request, session
+from flask import Flask, flash, redirect, render_template, session
 from models import db, connect_db, User
-from forms import RegisterUserForm, LoginUserForm, LogoutUserForm
+from forms import RegisterUserForm, LoginUserForm, OnlyCsrfForm
 
 
 app = Flask(__name__)
@@ -16,6 +16,7 @@ app.config['SECRET_KEY'] = 'MY_SECRET'
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 debug = DebugToolbarExtension(app)
 
+
 db.create_all()
 
 
@@ -27,7 +28,7 @@ def root():
 
 
 @app.route('/register', methods=['GET', 'POST'])
-def load_register_form(): #need to be more descriptive; register_user?
+def register_user_form():
     """Render register form"""
 
     form = RegisterUserForm()
@@ -39,24 +40,24 @@ def load_register_form(): #need to be more descriptive; register_user?
         first_name = form.first_name.data
         last_name = form.last_name.data
 
-        new_user = User.register(username=username, password=password)
-        user = User(username=username, password=new_user.password, email=email,
-                    first_name=first_name, last_name=last_name) #move instance creation into classmethod register
+        new_user = User.register(username=username,
+                                 password=password,
+                                 email=email,
+                                 first_name=first_name,
+                                 last_name=last_name)
 
-        db.session.add(user)
         db.session.commit()
 
-        session["username"] = user.username
+        session["username"] = new_user.username
         flash(f"Welcome {first_name}!")
         return redirect(f'/users/{username}')
 
     else:
-        # keep the validated data and show error msgs
         return render_template("register.html", form=form)
 
 
 @app.route('/login', methods=['GET', 'POST'])
-def show_login_form():#need to be more descriptive;
+def login_user_form():
     """Render login form"""
 
     form = LoginUserForm()
@@ -81,23 +82,30 @@ def show_login_form():#need to be more descriptive;
 def show_user_information(username):
     """Render page with user's information"""
 
+    form = OnlyCsrfForm()
+
     if "username" not in session:
         flash("You must be logged in to view!")
         return redirect('/login')
 
     if username != session['username']:
         flash("You can not view other users' information")
-        return redirect('/login') #instead of login, redirect to own users page
+
+        return redirect(f'/users/{session["username"]}')
 
     user = User.query.get_or_404(username)
-    return render_template('user-info.html', user=user, form=LogoutUserForm()) #maybe make form situation more consistent with other routes
+    return render_template('user-info.html', user=user, form=form)
 
 
 @app.post('/logout')
 def logout_user():
     """Logout user and clear session; redirect to '/'"""
 
-    # could be more descriptive; include form_validate?
-    session.pop("username", None)  
-    flash('Logged Out')
-    return redirect('/')
+    form = OnlyCsrfForm()
+
+    if form.validate_on_submit():
+        session.pop("username", None)
+        flash('Logged Out')
+        return redirect('/')
+
+    return redirect('/')  # is this still best return?

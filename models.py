@@ -36,14 +36,23 @@ class User(db.Model):
         db.String(30),
         nullable=False)
 
-    @classmethod #anything related to adding to database should be in class methods; not commit
-    # instanciate user here and all add to db, but not commit; the additional 
-    def register(cls, username, password): #pass in additional parameters, remove line 43
+    @classmethod  # anything related to adding to database should be in class methods; not commit
+    # instanciate user here and all add to db, but not commit; the additional
+    # pass in additional parameters, remove line 43
+    def register(cls, username, password, email, first_name, last_name):
         """register user with hashed pasword and return user"""
 
-        hashed = bcrypt.generate_password_hash(password).decode('utf8') 
+        hashed = bcrypt.generate_password_hash(password).decode('utf8')
 
-        return cls(username=username, password=hashed)
+        user = User(username=username,
+                    password=hashed,
+                    email=email,
+                    first_name=first_name,
+                    last_name=last_name)
+
+        db.session.add(user)
+
+        return user
 
     @classmethod
     def authenticate(cls, username, password):

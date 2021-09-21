@@ -39,5 +39,5 @@ class LoginUserForm(FlaskForm):
         validators=[InputRequired()])
 
 
-class LogoutUserForm(FlaskForm): #rename to onlycsrf?
+class OnlyCsrfForm(FlaskForm):
     """Used to add CSRF protection to logout POST"""
