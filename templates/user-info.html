@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %} Login Form {% endblock %}
+{% block title %} User Information {% endblock %}
 
 {% block content %}
 
@@ -19,6 +19,7 @@
     {% for note in user.notes %}
     <li>
         <a href="/notes/{{ note.id }}/update"> {{ note.title }}</a>
+        <p>{{ note.content }}</p>
 
         <form id="delete-post-form" action="/notes/{{note.id}}/delete" method="POST">
             {{ form.hidden_tag() }}
@@ -36,10 +37,10 @@
     <button>Delete User</button>
 </form>
 
-<!-- <form id="user-logout-form" action="/logout" method="POST">
+<form id="user-logout-form" action="/logout" method="POST">
     {{ form.hidden_tag() }}
 
     <button>Log Out</button>
-</form> -->
+</form>
 
 {% endblock %}

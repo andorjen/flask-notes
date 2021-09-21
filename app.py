@@ -1,7 +1,7 @@
 from flask_debugtoolbar import DebugToolbarExtension
 from flask import Flask, flash, redirect, render_template, session
 from models import db, connect_db, User, Note
-from forms import AddNoteForm, RegisterUserForm, LoginUserForm, OnlyCsrfForm
+from forms import AddNoteForm, EditNoteForm, RegisterUserForm, LoginUserForm, OnlyCsrfForm
 
 
 app = Flask(__name__)
@@ -16,7 +16,6 @@ app.config['SECRET_KEY'] = 'MY_SECRET'
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 debug = DebugToolbarExtension(app)
 
-db.drop_all()
 db.create_all()
 
 
@@ -80,7 +79,11 @@ def login_user_form():
 
 @app.get('/users/<username>')
 def show_user_information(username):
-    """Render page with user's information"""
+    """ Check if user is authorized to view user information, if not, redirect to login 
+        or their own user information page
+
+        Otherwise, render page with user's information
+    """
 
     form = OnlyCsrfForm()
 
@@ -113,8 +116,11 @@ def logout_user():
 
 @app.post('/users/<username>/delete')
 def delete_user(username):
-    """delete user and all of the user's notes from database,
-    and redirect to /.
+    """Check if user is authorized to delete user account, if not, redirect to login 
+        or their own user information page
+
+        Otherwise, delete user and all of the user's notes from database,
+        and redirect to /.
     """
     if "username" not in session:
         flash("You must be logged in first")
@@ -139,10 +145,17 @@ def delete_user(username):
         flash('Deleted user account')
         return redirect('/')
 
+# Notes Routes
+###############################################################
+
 
 @app.route('/users/<username>/notes/add', methods=['GET', 'POST'])
 def add_note_form(username):
-    """Render add note form"""
+    """Check if user is authorized to add note, if not, redirect to login 
+        or their own user information page
+
+        Otherwise add note and redirect to user's information page
+    """
 
     if "username" not in session:
         flash("You must be logged in first")
@@ -167,4 +180,64 @@ def add_note_form(username):
         return redirect(f'/users/{username}')
 
     else:
-        return render_template('note.html', form=form)
+        return render_template('add-note.html', form=form)
+
+
+@app.route('/notes/<int:note_id>/update', methods=['GET', 'POST'])
+def update_note(note_id):
+    """Check if user is authorized to update note, if not, redirect to login 
+        or their own user information page
+
+        Otherwise update note and redirect to user's information page
+    """
+
+    note = Note.query.get_or_404(note_id)
+
+    if "username" not in session:
+        flash("You must be logged in first")
+        return redirect('/login')
+
+    if note.author.username != session['username']:
+        flash("You can not edit note for other users")
+        return redirect(f'/users/{session["username"]}')
+
+    form = EditNoteForm(obj=note)
+
+    if form.validate_on_submit():
+        note.title = form.title.data
+        note.content = form.content.data
+        db.session.commit()
+        flash("Note has been updated")
+        return redirect(f'/users/{note.author.username}')
+
+    else:
+        return render_template('edit-note.html', form=form)
+
+
+@app.post('/notes/<int:note_id>/delete')
+def delete_note(note_id):
+    """Check if user is authorized to delete note, if not, redirect to login 
+        or their own user information page
+
+        Otherwise delete note and redirect to user's information page
+    """
+
+    note = Note.query.get_or_404(note_id)
+
+    if "username" not in session:
+        flash("You must be logged in first")
+        return redirect('/login')
+
+    if note.author.username != session['username']:
+        flash("You can not delete a note for other users")
+        return redirect(f'/users/{session["username"]}')
+
+    form = OnlyCsrfForm()
+
+    if form.validate_on_submit():
+
+        db.session.delete(note)
+        db.session.commit()
+
+        flash('Deleted note')
+        return redirect(f'/users/{note.author.username}')

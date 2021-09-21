@@ -44,7 +44,18 @@ class OnlyCsrfForm(FlaskForm):
 
 
 class AddNoteForm(FlaskForm):
-    """Form for login users"""
+    """Form for adding a new note"""
+
+    title = StringField(
+        "Title",
+        validators=[InputRequired(), length(max=100)])
+
+    content = TextAreaField(
+        "Content",
+        validators=[InputRequired()])
+
+class EditNoteForm(FlaskForm):
+    """Form for editting a note"""
 
     title = StringField(
         "Title",
