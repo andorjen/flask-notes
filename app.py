@@ -1,7 +1,7 @@
 from flask_debugtoolbar import DebugToolbarExtension
 from flask import Flask, flash, redirect, render_template, request, session
 from models import db, connect_db, User
-from forms import RegisterUserForm, LoginUserForm
+from forms import RegisterUserForm, LoginUserForm, LogoutUserForm
 
 
 app = Flask(__name__)
@@ -48,7 +48,7 @@ def load_register_form():
 
         session["username"] = user.username
         flash(f"Welcome {first_name}!")
-        return redirect("/secret")
+        return redirect(f'/users/{username}')
 
     else:
         # keep the validated data and show error msgs
@@ -69,7 +69,7 @@ def show_login_form():
 
         if user:
             session["username"] = user.username
-            return redirect('/secret')
+            return redirect(f'/users/{username}')
 
         else:
             form.username.errors = ["Invalid username or password"]
@@ -77,10 +77,27 @@ def show_login_form():
     return render_template('login.html', form=form)
 
 
-@app.get('/secret')
-def show_secret():
+@app.get('/users/<username>')
+def show_user_information(username):
+    """Render page with user's information"""
+
     if "username" not in session:
         flash("You must be logged in to view!")
         return redirect('/login')
 
-    return "YOU MADE IT!!!"
+    if username != session['username']:
+        flash("You can not view other users' information")
+        return redirect('/login')
+
+    user = User.query.get_or_404(username)
+    return render_template('user-info.html', user=user, form=LogoutUserForm())
+
+
+@app.post('/logout')
+def logout_user():
+    """Logout user and clear session; redirect to '/'"""
+
+    session.pop("username", None)
+
+    flash('Logged Out')
+    return redirect('/')

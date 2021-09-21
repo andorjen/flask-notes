@@ -37,3 +37,7 @@ class LoginUserForm(FlaskForm):
     password = PasswordField(
         "Password",
         validators=[InputRequired()])
+
+
+class LogoutUserForm(FlaskForm):
+    """Used to add CSRF protection to logout POST"""

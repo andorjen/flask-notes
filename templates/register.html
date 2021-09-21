@@ -3,6 +3,9 @@
 
 {% block content %}
 
+{% for msg in get_flashed_messages() %}
+<p>{{ msg }}</p>
+{% endfor %}
 
 <h2> Register </h2>
 
@@ -26,5 +29,6 @@
     <button>Submit</button>
 </form>
 
+<a href="/login"><button>Log In</button></a>
 
 {% endblock %}
