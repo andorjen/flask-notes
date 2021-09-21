@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField
-from wtforms.validators import InputRequired, Optional, Email, length, AnyOf
+from wtforms.validators import InputRequired, Email, length
 
 
 class RegisterUserForm(FlaskForm):
@@ -25,3 +25,15 @@ class RegisterUserForm(FlaskForm):
     last_name = StringField(
         "Last Name",
         validators=[InputRequired(), length(max=30)])
+
+
+class LoginUserForm(FlaskForm):
+    """Form for login users"""
+
+    username = StringField(
+        "Username",
+        validators=[InputRequired()])
+
+    password = PasswordField(
+        "Password",
+        validators=[InputRequired()])
