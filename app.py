@@ -27,7 +27,7 @@ def root():
 
 
 @app.route('/register', methods=['GET', 'POST'])
-def load_register_form():
+def load_register_form(): #need to be more descriptive; register_user?
     """Render register form"""
 
     form = RegisterUserForm()
@@ -41,7 +41,7 @@ def load_register_form():
 
         new_user = User.register(username=username, password=password)
         user = User(username=username, password=new_user.password, email=email,
-                    first_name=first_name, last_name=last_name)
+                    first_name=first_name, last_name=last_name) #move instance creation into classmethod register
 
         db.session.add(user)
         db.session.commit()
@@ -56,7 +56,7 @@ def load_register_form():
 
 
 @app.route('/login', methods=['GET', 'POST'])
-def show_login_form():
+def show_login_form():#need to be more descriptive;
     """Render login form"""
 
     form = LoginUserForm()
@@ -87,17 +87,17 @@ def show_user_information(username):
 
     if username != session['username']:
         flash("You can not view other users' information")
-        return redirect('/login')
+        return redirect('/login') #instead of login, redirect to own users page
 
     user = User.query.get_or_404(username)
-    return render_template('user-info.html', user=user, form=LogoutUserForm())
+    return render_template('user-info.html', user=user, form=LogoutUserForm()) #maybe make form situation more consistent with other routes
 
 
 @app.post('/logout')
 def logout_user():
     """Logout user and clear session; redirect to '/'"""
 
-    session.pop("username", None)
-
+    # could be more descriptive; include form_validate?
+    session.pop("username", None)  
     flash('Logged Out')
     return redirect('/')
