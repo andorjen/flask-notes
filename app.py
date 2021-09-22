@@ -223,8 +223,9 @@ def delete_note(note_id):
     """
 
     note = Note.query.get_or_404(note_id)
-
-    if "username" not in session:
+#make global constant for username to prevent misspelling
+    # app.beforerequest to potentially reduce repetition of checking user authorization
+    if "username" not in session: 
         flash("You must be logged in first")
         return redirect('/login')
 

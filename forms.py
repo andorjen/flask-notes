@@ -54,13 +54,17 @@ class AddNoteForm(FlaskForm):
         "Content",
         validators=[InputRequired()])
 
-class EditNoteForm(FlaskForm):
-    """Form for editting a note"""
+# since note forms similar, could potentially make generic
+# class EditNoteForm(FlaskForm):
+#     """Form for editting a note"""
 
-    title = StringField(
-        "Title",
-        validators=[InputRequired(), length(max=100)])
+#     title = StringField(
+#         "Title",
+#         validators=[InputRequired(), length(max=100)])
 
-    content = TextAreaField(
-        "Content",
-        validators=[InputRequired()])
+#     content = TextAreaField(
+#         "Content",
+#         validators=[InputRequired()])
+
+# could instead make the edit and add forms equal
+EditNoteForm = AddNoteForm
